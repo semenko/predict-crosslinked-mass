@@ -11,9 +11,12 @@
 #
 # Source: https://github.com/semenko/predict-crosslinked-mass
 
+from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+import argparse
 
-def ParseInputFAA(in_faa):
+
+def parse_input_faa(in_faa):
     """
     Read & store an input FAA in memory.
 
@@ -34,9 +37,8 @@ def ParseInputFAA(in_faa):
             faa_dict[working_key] = ''.join(working_peptide)
     return faa_dict
 
-print ParseInputFAA('test.faa')
 
-def GetDigestion(peptide_sequence, enzyme):
+def predict_digestion(peptide_sequence, enzyme):
     """
     Given an input peptide sequence & digestion enzyme, return digests.
 
@@ -44,6 +46,32 @@ def GetDigestion(peptide_sequence, enzyme):
         peptide_sequence = "TWNTGIMLLLITMATAFMGYVLPWGQMSFWGA" (string)
         enzyme = ""
     Output:
-        PASS
+        PASS (all possible digested fragments)
     """
     return True
+
+def compute_crosslinked_mass(peptide_sequence, crosslinker, mode):
+    """
+    Given an input peptide,
+    """
+
+    return True
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.')
+    parser.add_argument('--in_faa', metavar='input.faa', type=str,
+                        help='Input protein/peptide list (fasta format).', required=True)
+    parser.add_argument('--linker', dest='linker', type=str,
+                        choices=['BS3'], help='Linker to simulate.', required=True)
+    parser.add_argument('--enzyme', dest='enzyme', type=str,
+                        choices=['trypsin'], help='Digestion enzyme.', required=True)
+
+    args = parser.parse_args()
+    print(args.accumulate(args.integers))
+
+    pass
+
+
+if __name__ == '__main__':
+    main()
