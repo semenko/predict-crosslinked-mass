@@ -50,8 +50,8 @@ expasy_rules = {
     'caspase8':     '(?<=[IL]ET)D(?=[^PEDQKR])',
     'caspase9':     '(?<=LEH)D',
     'caspase10':    '(?<=IEA)D',
-    'chymotrypsin low specificity' : '([FY](?=[^P]))|(W(?=[^MP]))',
-    'chymotrypsin high specificity':
+    'chymotrypsin-low-specificity' : '([FY](?=[^P]))|(W(?=[^MP]))',
+    'chymotrypsin-high-specificity':
         '([FLY](?=[^P]))|(W(?=[^MP]))|(M(?=[^PY]))|(H(?=[^DMPW]))',
     'clostripain':   'R',
     'cnbr':          'M',
@@ -61,7 +61,7 @@ expasy_rules = {
     'glutamyl-endopeptidase': 'E',
     'granzyme-b':    '(?<=IEP)D',
     'hydroxylamine': 'N(?=G)',
-    'iodosobezoic acid': 'W',
+    'iodosobezoic-acid': 'W',
     'lysc':          'K',
     'ntcb':          '\w(?=C)',
     'pepsin-ph1.3':  '((?<=[^HKR][^P])[^R](?=[FLWY][^P]))|'

@@ -13,9 +13,9 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-from itertools import combinations
+from itertools import combinations_with_replacement, product
+from pyteomics_derived import cleave, expasy_rules  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
 import argparse
-from pyteomics_derived import cleave  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
 
 AA_SHORT_CODES = "ARNDCEQGHILKMFPSTWYVUOBZJX"
 
@@ -51,29 +51,6 @@ def parse_input_faa(in_faa):
     return faa_dict
 
 
-def predict_digestion(peptide_sequence, enzyme):
-    """
-    Given an input peptide sequence & digestion enzyme, return digests.
-
-    Input:
-        peptide_sequence = "TWNTGIMLLLITMATAFMGYVLPWGQMSFWGA" (string)
-        enzyme = ""
-    Output:
-        PASS (all possible digested fragments)
-    """
-    enzyme_rule = ENZYME_RULES[enzyme]
-    for motif, cutindex in enzyme_rule:
-        split_list = []
-        # Because we can cut at different areas after/before motifs, we can't use .split()
-
-        print(peptide_sequence)
-        if str(motif) in peptide_sequence:
-            pass
-        print(motif)
-        print(cutindex)
-    return True
-
-
 def compute_crosslinked_mass(peptide_sequence, crosslinker, mode):
     """
     Given an input peptide,
@@ -91,7 +68,7 @@ def main():
     parser.add_argument('--linker', dest='linker', type=str,
                         choices=['BS3'], help='Linker to simulate.', required=True)
     parser.add_argument('--enzyme', dest='enzyme', type=str,
-                        choices=['trypsin'], help='Digestion enzyme.', required=True)
+                        choices=expasy_rules.keys(), help='Digestion enzyme.', required=True)
 
     # Options for the Pyteomics-derived cleavage step
     digest_group = parser.add_argument_group('digest options')
@@ -103,19 +80,37 @@ def main():
     args = parser.parse_args()
 
 
-    # First, read our input file
-    faa_dict = parse_input_faa(args.input)
+    # Read & parse our input file
+    faa_dict = parse_input_faa(args.input)  # KEY, PEP
 
-    ## We have three options for types of
+    ## We need to enumerate three different types of peptide linkages:
+    # 1: Silly, orphan linkages (peptide1 + linker)
+    # 2: Simple self+self internal linkages (peptide1 + linker + peptide1)
+    # 3: Regular, self+other linkages (peptide1 + linker + peptide2)
 
-    print(cleave('AKAKBKCK', 'proteinase-k', missed_cleavages=args.cleavages, overlap=args.overlap))
-
+    # Type 1 (peptide1 + linker)
     for peptide_id, peptide_sequence in faa_dict.iteritems():
-        #print(peptide_id)
-        # print(peptide_sequence)
-       #  digest = predict_digestion(peptide_sequence, args.enzyme)
+        pass
 
-        break
+    # Type 2 (peptide1 + linker + peptide1)
+    for peptide_id, peptide_sequence in faa_dict.iteritems():
+        pass
+
+    # Type 3 (peptide1 + linker + peptide2)
+
+    for protein1, protein2, in combinations_with_replacement(faa_dict.iterkeys(), 2):
+        # For each protein combination, generate digestions & the subsequent permutations
+        protein1_cleavages = cleave(faa_dict[protein1], args.enzyme,
+                                    missed_cleavages=args.cleavages, overlap=args.overlap)
+        protein2_cleavages = cleave(faa_dict[protein2], args.enzyme,
+                                    missed_cleavages=args.cleavages, overlap=args.overlap)
+
+        print(protein1 + " " + protein2)
+        for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
+            print("\t" + peptide1 + " " + peptide2)
+
+
+
 
 
     # Generate all possible digestion fragments
