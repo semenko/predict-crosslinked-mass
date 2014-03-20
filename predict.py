@@ -14,14 +14,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from itertools import combinations_with_replacement, product
-from pyteomics_derived import cleave, expasy_rules  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
+from pyteomics_derived import cleave, \
+    expasy_rules  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
 import argparse
 
 AA_SHORT_CODES = "ARNDCEQGHILKMFPSTWYVUOBZJX"
 
 # Crosslinker options
 CROSSLINKER_RULES = {
-    "BF3": True
+    "BS3": True
 }
 
 
@@ -47,7 +48,7 @@ def parse_input_faa(in_faa):
 
     # Be paranoid and make sure we understand the AA codes we were given
     for peptide in faa_dict.itervalues():
-        assert(all([aa in AA_SHORT_CODES for aa in peptide]))
+        assert (all([aa in AA_SHORT_CODES for aa in peptide]))
     return faa_dict
 
 
@@ -72,7 +73,7 @@ def main():
 
     # Options for the Pyteomics-derived cleavage step
     digest_group = parser.add_argument_group('digest options')
-    digest_group.add_argument('--missed-cleavages', dest="cleavages", type=int, default=0, choices=range(0,10),
+    digest_group.add_argument('--missed-cleavages', dest="cleavages", type=int, default=0, choices=range(0, 10),
                               help='Max number of missed cleavages.', required=False)
     digest_group.add_argument('--find-overlaps', dest="overlap", action='store_true',
                               help='Find overlapping cleavages [Slow!].', required=False)
@@ -81,28 +82,23 @@ def main():
 
 
     # Read & parse our input file
-    faa_dict = parse_input_faa(args.input)  # KEY, PEP
+    faa_sequence_dict = parse_input_faa(args.input)
 
     ## We need to enumerate three different types of peptide linkages:
     # 1: Silly, orphan linkages (peptide1 + linker)
     # 2: Simple self+self internal linkages (peptide1 + linker + peptide1)
     # 3: Regular, self+other linkages (peptide1 + linker + peptide2)
 
-    # Type 1 (peptide1 + linker)
-    for peptide_id, peptide_sequence in faa_dict.iteritems():
+    # Types 1 & 2 (linker associated with one protein's peptides only)
+    for peptide_id, peptide_sequence in faa_sequence_dict.iteritems():
         pass
 
-    # Type 2 (peptide1 + linker + peptide1)
-    for peptide_id, peptide_sequence in faa_dict.iteritems():
-        pass
-
-    # Type 3 (peptide1 + linker + peptide2)
-
-    for protein1, protein2, in combinations_with_replacement(faa_dict.iterkeys(), 2):
+    # Type 3 (protein1peptide + linker + protein2peptide)
+    for protein1, protein2, in combinations_with_replacement(faa_sequence_dict.iterkeys(), 2):
         # For each protein combination, generate digestions & the subsequent permutations
-        protein1_cleavages = cleave(faa_dict[protein1], args.enzyme,
+        protein1_cleavages = cleave(faa_sequence_dict[protein1], args.enzyme,
                                     missed_cleavages=args.cleavages, overlap=args.overlap)
-        protein2_cleavages = cleave(faa_dict[protein2], args.enzyme,
+        protein2_cleavages = cleave(faa_sequence_dict[protein2], args.enzyme,
                                     missed_cleavages=args.cleavages, overlap=args.overlap)
 
         print(protein1 + " " + protein2)
@@ -113,8 +109,7 @@ def main():
 
 
 
-    # Generate all possible digestion fragments
-
+            # Generate all possible digestion fragments
 
 
 if __name__ == '__main__':
