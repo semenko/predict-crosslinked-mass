@@ -120,7 +120,7 @@ def cleave(sequence, rule, missed_cleavages=0, overlap=False):
             peptides.add(sequence[cleavage_sites[j]:cleavage_sites[-1]])
         if overlap and i not in {0, None}:
             peptides.update(
-                    cleave(sequence[i:], rule_regex, missed_cleavages, overlap))
+                    cleave(sequence[i:], rule, missed_cleavages, overlap))
 
     if '' in peptides:
         peptides.remove('')

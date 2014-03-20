@@ -12,23 +12,18 @@
 # Source: https://github.com/semenko/predict-crosslinked-mass
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import deque, OrderedDict
+from collections import OrderedDict
 from itertools import combinations
 import argparse
 from pyteomics_derived import cleave  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
 
 AA_SHORT_CODES = "ARNDCEQGHILKMFPSTWYVUOBZJX"
 
-# Digestion options
-# Definitions are: (["MOTIFS", "MOTIFS"], [CUT_INDEX, CUT_INDEX])
-ENZYME_RULES = {
-    "trypsin": (["K","R"], [1,1])
-}
-
 # Crosslinker options
 CROSSLINKER_RULES = {
     "BF3": True
 }
+
 
 def parse_input_faa(in_faa):
     """
@@ -79,7 +74,6 @@ def predict_digestion(peptide_sequence, enzyme):
     return True
 
 
-
 def compute_crosslinked_mass(peptide_sequence, crosslinker, mode):
     """
     Given an input peptide,
@@ -89,21 +83,32 @@ def compute_crosslinked_mass(peptide_sequence, crosslinker, mode):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.')
+    # Parse & interpret command line flags.
+    parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input', dest="input", metavar='input.faa', type=str,
-                        help='Input protein/peptide list (fasta format).', required=True)
+                        help='Input protein list (fasta format).', required=True)
     parser.add_argument('--linker', dest='linker', type=str,
                         choices=['BS3'], help='Linker to simulate.', required=True)
     parser.add_argument('--enzyme', dest='enzyme', type=str,
                         choices=['trypsin'], help='Digestion enzyme.', required=True)
 
+    # Options for the Pyteomics-derived cleavage step
+    digest_group = parser.add_argument_group('digest options')
+    digest_group.add_argument('--missed-cleavages', dest="cleavages", type=int, default=0, choices=range(0,10),
+                              help='Max number of missed cleavages.', required=False)
+    digest_group.add_argument('--find-overlaps', dest="overlap", action='store_true',
+                              help='Find overlapping cleavages [Slow!].', required=False)
+
     args = parser.parse_args()
+
 
     # First, read our input file
     faa_dict = parse_input_faa(args.input)
 
-    # Cleave
-    print(cleave('AKAKBKCK', 'proteinase-k', missed_cleavages=2))
+    ## We have three options for types of
+
+    print(cleave('AKAKBKCK', 'proteinase-k', missed_cleavages=args.cleavages, overlap=args.overlap))
 
     for peptide_id, peptide_sequence in faa_dict.iteritems():
         #print(peptide_id)
