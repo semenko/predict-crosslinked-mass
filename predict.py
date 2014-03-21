@@ -87,6 +87,7 @@ def attempt_crosslink(crosslinker, *peptides):
 def main():
     # Parse & interpret command line flags.
     parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.',
+                                     usage='%(prog)s [options]',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input', dest="input", metavar='input.faa', type=str,
                         help='Input protein list (fasta format).', required=True)
