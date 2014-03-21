@@ -18,6 +18,7 @@ from pyteomics_derived import cleave, expasy_rules  # Adapted from the Apache-li
 from memoization import memoize_single, memoize_args
 import argparse
 import crosslinkers
+import inspect
 
 # Wrap external cleave function in memoize decorator.
 cleave = memoize_args(cleave)
@@ -39,13 +40,6 @@ AA_AVERAGE_MASSES = {
     'K': 128.1741, 'M': 131.1926, 'L': 113.1594, 'N': 114.1038,
     'Q': 128.1307, 'P':  97.1167, 'S':  87.0782, 'R': 156.1875,
     'T': 101.1051, 'W': 186.2132, 'V':  99.1326, 'Y': 163.1760
-}
-
-# Crosslinker definitions, somewhat rudimentary
-#   Rule: (function, mass_shift_when_mono_linked, mass_shift_when_doubly_linked])
-#
-CROSSLINKER_RULES = {
-    "BS3": {'rule': crosslinkers.bs3, 'shifts': [156.07864, 138.06808]}
 }
 
 
@@ -82,12 +76,12 @@ def parse_input_faa(in_faa):
     return faa_dict
 
 
-@memoize_args
-def can_crosslink(crosslinker, peptide1, peptide2):
-    # Ignore peptides of length 2 or less
-    if len(peptide1) >= MIN_PEPTIDE_LENGTH and len(peptide2) >= MIN_PEPTIDE_LENGTH:
-        return CROSSLINKER_RULES[crosslinker]['rule'](peptide1, peptide2)
-    return False
+@memoize_args  # We assume the crosslinkers are deterministic.
+def attempt_crosslink(crosslinker, *peptides):
+    # Ignore peptides less than MIN_PEPTIDE_LENGTH
+    if all([len(p) >= MIN_PEPTIDE_LENGTH for p in peptides]):
+        return getattr(crosslinkers, crosslinker)(*peptides)
+    return (False, 0)
 
 
 def main():
@@ -96,8 +90,12 @@ def main():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input', dest="input", metavar='input.faa', type=str,
                         help='Input protein list (fasta format).', required=True)
+
+    all_crosslinkers = inspect.getmembers(crosslinkers, inspect.isfunction)
+    crosslinker_names = [i[0] for i in all_crosslinkers]
+
     parser.add_argument('--linker', dest='linker', type=str,
-                        choices=['BS3'], help='Linker to simulate.', required=True)
+                        choices=crosslinker_names, help='Linker to simulate.', required=True)
     parser.add_argument('--enzyme', dest='enzyme', type=str,
                         choices=expasy_rules.keys(), help='Digestion enzyme.', required=True)
 
@@ -133,13 +131,17 @@ def main():
         protein_cleavages = cleave(faa_sequence_dict[protein_id], args.enzyme, args.cleavages, args.overlap)
         # Type 1, mono-links
         for peptide in protein_cleavages:
-            if can_crosslink(args.linker, peptide, peptide):
-                print(1, protein_id, peptide, protein_id, peptide, mass(peptide) + 156.07864 + MASS_PROTON, sep=",")
+            result = attempt_crosslink(args.linker, peptide)
+            if result[0]:
+                print(1, protein_id, peptide, '', '',
+                      mass(peptide) + result[1] + MASS_PROTON, sep=",")
 
         # Type 2, interpeptide links
         for peptide1, peptide2 in combinations_with_replacement(protein_cleavages, 2):
-            if can_crosslink(args.linker, peptide1, peptide2):
-                print(2, protein_id, peptide1, protein_id, peptide2, mass(peptide1) + mass(peptide2) + 138.06808 + MASS_PROTON, sep=",")
+            result = attempt_crosslink(args.linker, peptide1, peptide2)
+            if result[0]:
+                print(2, protein_id, peptide1, protein_id, peptide2,
+                      mass(peptide1) + mass(peptide2) + result[1] + MASS_PROTON, sep=",")
 
 
     # Type 3 (intrapeptide combinations)
@@ -150,8 +152,10 @@ def main():
 
         # print(protein1_id + " " + protein2_id)
         for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
-            if can_crosslink(args.linker, peptide1, peptide2):
-                print(3, protein1_id, peptide1, protein2_id, peptide2, mass(peptide1) + mass(peptide2) + 138.06808 + MASS_PROTON, sep=",")
+            result = attempt_crosslink(args.linker, peptide1, peptide2)
+            if result[0]:
+                print(3, protein1_id, peptide1, protein2_id, peptide2,
+                      mass(peptide1) + mass(peptide2) + result[1] + MASS_PROTON, sep=",")
 
 
 if __name__ == '__main__':
