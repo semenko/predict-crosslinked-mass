@@ -14,9 +14,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from itertools import combinations_with_replacement, product
-from pyteomics_derived import cleave, \
-    expasy_rules  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
+from pyteomics_derived import cleave, expasy_rules  # Adapted from the Apache-licensed Pyteomics package.
+from memoization import memoize_single, memoize_args
 import argparse
+
+# Wrap external cleave function in memoize decorator.
+cleave = memoize_args(cleave)
+
 
 # http://physics.nist.gov/cuu/Constants/
 MASS_PROTON = 1.007276466812
@@ -38,6 +42,12 @@ AA_AVERAGE_MASSES = {
 CROSSLINKER_RULES = {
     "BS3": ((("K", 0), ("K", 0)),  [156.08, 138.07])
 }
+
+
+@memoize_single
+def mass(peptide_sequence):
+    """ Compute a given peptide's mass. """
+    return sum([AA_AVERAGE_MASSES[aa] for aa in peptide_sequence])
 
 
 def parse_input_faa(in_faa):
@@ -66,14 +76,6 @@ def parse_input_faa(in_faa):
     return faa_dict
 
 
-def compute_crosslinked_mass(peptide_sequence, crosslinker, mode):
-    """
-    Given an input peptide,
-    """
-
-    return True
-
-
 def main():
     # Parse & interpret command line flags.
     parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.',
@@ -95,8 +97,8 @@ def main():
     # Other various options
     """Oxidation adds 15.9949 Da."""
     other_group = parser.add_argument_group('other options')
-    digest_group.add_argument('--oxidize-met', dest="ox_met", action='store_true',
-                              help='Oxidize all methionines.', required=False)
+    other_group.add_argument('--oxidize-met', dest="ox_met", action='store_true',
+                             help='Oxidize all methionines.', required=False)
 
     args = parser.parse_args()
 
@@ -111,22 +113,21 @@ def main():
 
     # Types 1 & 2 (linker associated with one protein's peptides only)
     for protein_id, protein_sequence in faa_sequence_dict.iteritems():
-        protein_cleavages = cleave(faa_sequence_dict[protein_id], args.enzyme,
-                                    missed_cleavages=args.cleavages, overlap=args.overlap)
+        protein_cleavages = cleave(faa_sequence_dict[protein_id], args.enzyme, args.cleavages, args.overlap)
         for cleavage in protein_cleavages:
-            pass
+            mass(cleavage)
 
     # Type 3 (intrapeptide combinations)
     for protein1_id, protein2_id, in combinations_with_replacement(faa_sequence_dict.iterkeys(), 2):
         # For each protein combination, generate digestions & the subsequent permutations
-        protein1_cleavages = cleave(faa_sequence_dict[protein1_id], args.enzyme,
-                                    missed_cleavages=args.cleavages, overlap=args.overlap)
-        protein2_cleavages = cleave(faa_sequence_dict[protein2_id], args.enzyme,
-                                    missed_cleavages=args.cleavages, overlap=args.overlap)
+        protein1_cleavages = cleave(faa_sequence_dict[protein1_id], args.enzyme, args.cleavages, args.overlap)
+        protein2_cleavages = cleave(faa_sequence_dict[protein2_id], args.enzyme, args.cleavages, args.overlap)
 
-        print(protein1_id + " " + protein2_id)
+        # print(protein1_id + " " + protein2_id)
         for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
-            print("\t" + peptide1 + " " + peptide2)
+            #print("\t" + peptide1 + " " + peptide2)
+            mass(peptide1)
+            mass(peptide2)
 
 
 

@@ -78,7 +78,7 @@ expasy_rules = {
     }
 
 
-def cleave(sequence, rule, missed_cleavages=0, overlap=False):
+def cleave(sequence, rule, missed_cleavages, overlap):
     """Cleaves a polypeptide sequence using a given rule.
 
     Parameters
@@ -104,9 +104,9 @@ def cleave(sequence, rule, missed_cleavages=0, overlap=False):
 
     Examples
     --------
-    >>> cleave('AKAKBK', expasy_rules['trypsin'], 0)
+    >>> cleave('AKAKBK', expasy_rules['trypsin'], 0, False)
     set(['AK', 'BK'])
-    >>> cleave('AKAKBKCK', expasy_rules['trypsin'], 2)
+    >>> cleave('AKAKBKCK', expasy_rules['trypsin'], 2, False)
     set(['CK', 'AKBK', 'BKCK', 'AKAK', 'AKBKCK', 'AK', 'AKAKBK', 'BK'])
 
     """
