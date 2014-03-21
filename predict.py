@@ -18,11 +18,25 @@ from pyteomics_derived import cleave, \
     expasy_rules  # Cherry-picked & modified from the Apache-licensed Pyteomics package.
 import argparse
 
-AA_SHORT_CODES = "ARNDCEQGHILKMFPSTWYVUOBZJX"
+# http://physics.nist.gov/cuu/Constants/
+MASS_PROTON = 1.007276466812
 
-# Crosslinker options
+# For sanity-checking .faa input proteins
+AA_SHORT_CODES = "ACEDGFIHKMLNQPSRTWVY"
+
+AA_AVERAGE_MASSES = {
+    'A':  71.0788, 'C': 103.1388, 'E': 129.1155, 'D': 115.0886,
+    'G':  57.0519, 'F': 147.1766, 'I': 113.1594, 'H': 137.1411,
+    'K': 128.1741, 'M': 131.1926, 'L': 113.1594, 'N': 114.1038,
+    'Q': 128.1307, 'P':  97.1167, 'S':  87.0782, 'R': 156.1875,
+    'T': 101.1051, 'W': 186.2132, 'V':  99.1326, 'Y': 163.1760
+}
+
+# Crosslinker definitions
+#   Rule: ((, mass_shift_when_singly_linked, mass_shift_when_doubly_linked])
+#
 CROSSLINKER_RULES = {
-    "BS3": True
+    "BS3": ((("K", 0), ("K", 0)),  [156.08, 138.07])
 }
 
 
@@ -78,6 +92,12 @@ def main():
     digest_group.add_argument('--find-overlaps', dest="overlap", action='store_true',
                               help='Find overlapping cleavages [Slow!].', required=False)
 
+    # Other various options
+    """Oxidation adds 15.9949 Da."""
+    other_group = parser.add_argument_group('other options')
+    digest_group.add_argument('--oxidize-met', dest="ox_met", action='store_true',
+                              help='Oxidize all methionines.', required=False)
+
     args = parser.parse_args()
 
 
@@ -85,31 +105,30 @@ def main():
     faa_sequence_dict = parse_input_faa(args.input)
 
     ## We need to enumerate three different types of peptide linkages:
-    # 1: Silly, orphan linkages (peptide1 + linker)
-    # 2: Simple self+self internal linkages (peptide1 + linker + peptide1)
-    # 3: Regular, self+other linkages (peptide1 + linker + peptide2)
+    # 1: Mono-links, e.g. protein1's peptide + linker (other end of crosslinker may be hydrolysis product, etc.)
+    # 2: Interpeptide links, e.g. protein1's peptide + linker + protein1's peptide
+    # 3: Intrapeptide links, e.g. protein1's peptide + linker + protein2's peptide
 
     # Types 1 & 2 (linker associated with one protein's peptides only)
-    for peptide_id, peptide_sequence in faa_sequence_dict.iteritems():
-        pass
+    for protein_id, protein_sequence in faa_sequence_dict.iteritems():
+        protein_cleavages = cleave(faa_sequence_dict[protein_id], args.enzyme,
+                                    missed_cleavages=args.cleavages, overlap=args.overlap)
+        for cleavage in protein_cleavages:
+            pass
 
-    # Type 3 (protein1peptide + linker + protein2peptide)
-    for protein1, protein2, in combinations_with_replacement(faa_sequence_dict.iterkeys(), 2):
+    # Type 3 (intrapeptide combinations)
+    for protein1_id, protein2_id, in combinations_with_replacement(faa_sequence_dict.iterkeys(), 2):
         # For each protein combination, generate digestions & the subsequent permutations
-        protein1_cleavages = cleave(faa_sequence_dict[protein1], args.enzyme,
+        protein1_cleavages = cleave(faa_sequence_dict[protein1_id], args.enzyme,
                                     missed_cleavages=args.cleavages, overlap=args.overlap)
-        protein2_cleavages = cleave(faa_sequence_dict[protein2], args.enzyme,
+        protein2_cleavages = cleave(faa_sequence_dict[protein2_id], args.enzyme,
                                     missed_cleavages=args.cleavages, overlap=args.overlap)
 
-        print(protein1 + " " + protein2)
+        print(protein1_id + " " + protein2_id)
         for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
             print("\t" + peptide1 + " " + peptide2)
 
 
-
-
-
-            # Generate all possible digestion fragments
 
 
 if __name__ == '__main__':

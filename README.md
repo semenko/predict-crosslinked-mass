@@ -1,6 +1,6 @@
-# Predict-Crosslinked-Mass
+# Predict Crosslinked Mass
 
-This script is designed to help in determining protein-protein interactions, by predicting the mass of
+This script is designed to assist in determining protein-protein interactions, by predicting the mass of
 crosslinked peptide fragments following an enzymatic digestion of a protein complex.
 
 
@@ -8,19 +8,16 @@ crosslinked peptide fragments following an enzymatic digestion of a protein comp
 
 There are three types of crosslinks predicted by the program:
 
-1. "Orphan" crosslinks, e.g. protein1peptide + linker
-2. "Internal" crosslinks, e.g. protein1peptide + linker + protein1peptide
-3. Desired, cross-protein links, e.g. protein1peptide + linker + protein2peptide
+1. Mono-links, e.g. protein1's peptide + linker (other end of crosslinker may be hydrolysis product, etc.)
+2. Interpeptide links, e.g. protein1's peptide + linker + protein1's peptide
+3. Intrapeptide links, e.g. protein1's peptide + linker + protein2's peptide
 
 
 ## Authors
-**Nick Semenkovich**
-
-+ https://github.com/semenko/
-+ https://nick.semenkovich.com/
+**Nick Semenkovich** | https://nick.semenkovich.com/
 
 ## License
-Copyright 2014, Nick Semenkovich <semenko@alum.mit.edu>
+Copyright 2014, Nick Semenkovich \<semenko@alum.mit.edu\>
 
 Released under the MIT License. See LICENSE for details.
 
