@@ -37,9 +37,9 @@ at Expasy.
 These describe the C-terminal sites of cleavage.
 """
 expasy_rules = {
-    'arg-c':         'R',
-    'asp-n':         '\w(?=D)',
-    'bnps-skatole' : 'W',
+    'arg-c':        'R',
+    'asp-n':        '\w(?=D)',
+    'bnps-skatole': 'W',
     'caspase1':     '(?<=[FWYL]\w[HAT])D(?=[^PEDQKR])',
     'caspase2':     '(?<=DVA)D(?=[^PEDQKR])',
     'caspase3':     '(?<=DMQ)D(?=[^PEDQKR])',
@@ -50,9 +50,8 @@ expasy_rules = {
     'caspase8':     '(?<=[IL]ET)D(?=[^PEDQKR])',
     'caspase9':     '(?<=LEH)D',
     'caspase10':    '(?<=IEA)D',
-    'chymotrypsin-low-specificity' : '([FY](?=[^P]))|(W(?=[^MP]))',
-    'chymotrypsin-high-specificity':
-        '([FLY](?=[^P]))|(W(?=[^MP]))|(M(?=[^PY]))|(H(?=[^DMPW]))',
+    'chymotrypsin-low-specificity':     '([FY](?=[^P]))|(W(?=[^MP]))',
+    'chymotrypsin-high-specificity':    '([FLY](?=[^P]))|(W(?=[^MP]))|(M(?=[^PY]))|(H(?=[^DMPW]))',
     'clostripain':   'R',
     'cnbr':          'M',
     'enterokinase':  '(?<=[DN][DN][DN])K',
@@ -75,7 +74,7 @@ expasy_rules = {
     'thrombin':      '((?<=G)R(?=G))|'
                      '((?<=[AFGILTVM][AFGILTVWA]P)R(?=[^DE][^DE]))',
     'trypsin':       '([KR](?=[^P]))|((?<=W)K(?=P))|((?<=M)R(?=P))'
-    }
+}
 
 
 def cleave(sequence, rule, missed_cleavages, overlap):
@@ -119,8 +118,7 @@ def cleave(sequence, rule, missed_cleavages, overlap):
         for j in range(0, len(cleavage_sites)-1):
             peptides.add(sequence[cleavage_sites[j]:cleavage_sites[-1]])
         if overlap and i not in {0, None}:
-            peptides.update(
-                    cleave(sequence[i:], rule, missed_cleavages, overlap))
+            peptides.update(cleave(sequence[i:], rule, missed_cleavages, overlap))
 
     if '' in peptides:
         peptides.remove('')

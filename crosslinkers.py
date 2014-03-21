@@ -20,8 +20,8 @@ def bs3(*peptides):
     if len(peptides) == 1:
         # Mono-link
         if "K" in peptides[0]:
-            return (True, 156.07864)
+            return {'can_link': True, 'mass_shift': 156.07864}
     elif len(peptides) == 2:
         if "K" in peptides[0] and "K" in peptides[1]:
-            return (True, 138.06808)
-    return (False, 0)
+            return {'can_link': True, 'mass_shift': 138.06808}
+    return {'can_link': False}

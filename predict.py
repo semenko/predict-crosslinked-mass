@@ -81,7 +81,7 @@ def attempt_crosslink(crosslinker, *peptides):
     # Ignore peptides less than MIN_PEPTIDE_LENGTH
     if all([len(p) >= MIN_PEPTIDE_LENGTH for p in peptides]):
         return getattr(crosslinkers, crosslinker)(*peptides)
-    return (False, 0)
+    return {'can_link': False}
 
 
 def main():
@@ -119,7 +119,6 @@ def main():
     # Read & parse our input file
     faa_sequence_dict = parse_input_faa(args.input)
 
-
     print("type,protein1_id,peptide1,protein2_id,peptide2,mass")
     ## We need to enumerate three different types of peptide linkages:
     # 1: Mono-links, e.g. protein1's peptide + linker (other end of crosslinker may be hydrolysis product, etc.)
@@ -132,17 +131,16 @@ def main():
         # Type 1, mono-links
         for peptide in protein_cleavages:
             result = attempt_crosslink(args.linker, peptide)
-            if result[0]:
+            if result['can_link']:
                 print(1, protein_id, peptide, '', '',
-                      mass(peptide) + result[1] + MASS_PROTON, sep=",")
+                      mass(peptide) + result['mass_shift'] + MASS_PROTON, sep=",")
 
         # Type 2, interpeptide links
         for peptide1, peptide2 in combinations_with_replacement(protein_cleavages, 2):
             result = attempt_crosslink(args.linker, peptide1, peptide2)
-            if result[0]:
+            if result['can_link']:
                 print(2, protein_id, peptide1, protein_id, peptide2,
-                      mass(peptide1) + mass(peptide2) + result[1] + MASS_PROTON, sep=",")
-
+                      mass(peptide1) + mass(peptide2) + result['mass_shift'] + MASS_PROTON, sep=",")
 
     # Type 3 (intrapeptide combinations)
     for protein1_id, protein2_id, in combinations_with_replacement(faa_sequence_dict.keys(), 2):
@@ -153,9 +151,9 @@ def main():
         # print(protein1_id + " " + protein2_id)
         for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
             result = attempt_crosslink(args.linker, peptide1, peptide2)
-            if result[0]:
+            if result['can_link']:
                 print(3, protein1_id, peptide1, protein2_id, peptide2,
-                      mass(peptide1) + mass(peptide2) + result[1] + MASS_PROTON, sep=",")
+                      mass(peptide1) + mass(peptide2) + result['mass_shift'] + MASS_PROTON, sep=",")
 
 
 if __name__ == '__main__':
