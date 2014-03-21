@@ -21,9 +21,13 @@ import argparse
 # Wrap external cleave function in memoize decorator.
 cleave = memoize_args(cleave)
 
+# Remove silly small digestions (e.g. ignore peptides of length 1-2)
+MIN_PEPTIDE_LENGTH = 3
 
 # http://physics.nist.gov/cuu/Constants/
 MASS_PROTON = 1.007276466812
+
+MASS_H2O = 18.01528
 
 # For sanity-checking .faa input proteins
 AA_SHORT_CODES = "ACEDGFIHKMLNQPSRTWVY"
@@ -36,18 +40,18 @@ AA_AVERAGE_MASSES = {
     'T': 101.1051, 'W': 186.2132, 'V':  99.1326, 'Y': 163.1760
 }
 
-# Crosslinker definitions
+# Crosslinker definitions, somewhat rudimentary
 #   Rule: ((, mass_shift_when_singly_linked, mass_shift_when_doubly_linked])
 #
 CROSSLINKER_RULES = {
-    "BS3": ((("K"), ("K")),  [156.08, 138.07])
+    "BS3": ("K", [156.07864, 138.06808])
 }
 
 
 @memoize_single
 def mass(peptide_sequence):
     """ Compute a given peptide's mass. """
-    return sum([AA_AVERAGE_MASSES[aa] for aa in peptide_sequence])
+    return sum([AA_AVERAGE_MASSES[aa] for aa in peptide_sequence]) + MASS_H2O
 
 
 def parse_input_faa(in_faa):
@@ -80,7 +84,7 @@ def parse_input_faa(in_faa):
 @memoize_args
 def can_crosslink(crosslinker, peptide1, peptide2):
     # Ignore peptides of length 2 or less
-    if len(peptide1) > 2 and len(peptide2) > 2:
+    if len(peptide1) >= MIN_PEPTIDE_LENGTH and len(peptide2) >= MIN_PEPTIDE_LENGTH:
         if "K" in peptide1 and "K" in peptide2:  ## TODO: fix this hack
             return True
     return False
