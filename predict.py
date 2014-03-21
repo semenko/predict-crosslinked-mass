@@ -17,6 +17,7 @@ from itertools import combinations_with_replacement, product
 from pyteomics_derived import cleave, expasy_rules  # Adapted from the Apache-licensed Pyteomics package.
 from memoization import memoize_single, memoize_args
 import argparse
+import crosslinkers
 
 # Wrap external cleave function in memoize decorator.
 cleave = memoize_args(cleave)
@@ -41,10 +42,10 @@ AA_AVERAGE_MASSES = {
 }
 
 # Crosslinker definitions, somewhat rudimentary
-#   Rule: ((, mass_shift_when_singly_linked, mass_shift_when_doubly_linked])
+#   Rule: (function, mass_shift_when_mono_linked, mass_shift_when_doubly_linked])
 #
 CROSSLINKER_RULES = {
-    "BS3": ("K", [156.07864, 138.06808])
+    "BS3": {'rule': crosslinkers.bs3, 'shifts': [156.07864, 138.06808]}
 }
 
 
@@ -75,7 +76,7 @@ def parse_input_faa(in_faa):
             faa_dict[working_key] = ''.join(working_peptide)
 
     # Be paranoid and make sure we understand the AA codes we were given
-    for protein_id, protein_sequence in faa_dict.iteritems():
+    for protein_id, protein_sequence in faa_dict.items():
         assert("," not in protein_id)  # Unescaped commas would break our CSV output.
         assert(all([aa in AA_SHORT_CODES for aa in protein_sequence]))
     return faa_dict
@@ -85,8 +86,7 @@ def parse_input_faa(in_faa):
 def can_crosslink(crosslinker, peptide1, peptide2):
     # Ignore peptides of length 2 or less
     if len(peptide1) >= MIN_PEPTIDE_LENGTH and len(peptide2) >= MIN_PEPTIDE_LENGTH:
-        if "K" in peptide1 and "K" in peptide2:  ## TODO: fix this hack
-            return True
+        return CROSSLINKER_RULES[crosslinker]['rule'](peptide1, peptide2)
     return False
 
 
@@ -121,15 +121,15 @@ def main():
     # Read & parse our input file
     faa_sequence_dict = parse_input_faa(args.input)
 
-    print("type,protein1_id,peptide1,protein2_id,peptide2,mass")
 
+    print("type,protein1_id,peptide1,protein2_id,peptide2,mass")
     ## We need to enumerate three different types of peptide linkages:
     # 1: Mono-links, e.g. protein1's peptide + linker (other end of crosslinker may be hydrolysis product, etc.)
     # 2: Interpeptide links, e.g. protein1's peptide + linker + protein1's peptide
     # 3: Intrapeptide links, e.g. protein1's peptide + linker + protein2's peptide
 
     # Types 1 & 2 (linker associated with one protein's peptides only)
-    for protein_id, protein_sequence in faa_sequence_dict.iteritems():
+    for protein_id, protein_sequence in faa_sequence_dict.items():
         protein_cleavages = cleave(faa_sequence_dict[protein_id], args.enzyme, args.cleavages, args.overlap)
         # Type 1, mono-links
         for peptide in protein_cleavages:
@@ -143,14 +143,15 @@ def main():
 
 
     # Type 3 (intrapeptide combinations)
-    for protein1_id, protein2_id, in combinations_with_replacement(faa_sequence_dict.iterkeys(), 2):
+    for protein1_id, protein2_id, in combinations_with_replacement(faa_sequence_dict.keys(), 2):
         # For each protein combination, generate digestions & the subsequent permutations
         protein1_cleavages = cleave(faa_sequence_dict[protein1_id], args.enzyme, args.cleavages, args.overlap)
         protein2_cleavages = cleave(faa_sequence_dict[protein2_id], args.enzyme, args.cleavages, args.overlap)
 
         # print(protein1_id + " " + protein2_id)
         for peptide1, peptide2, in product(protein1_cleavages, protein2_cleavages):
-            print(3, protein1_id, peptide1, protein2_id, peptide2, mass(peptide1) + mass(peptide2) + 138.06808 + MASS_PROTON, sep=",")
+            if can_crosslink(args.linker, peptide1, peptide2):
+                print(3, protein1_id, peptide1, protein2_id, peptide2, mass(peptide1) + mass(peptide2) + 138.06808 + MASS_PROTON, sep=",")
 
 
 if __name__ == '__main__':
