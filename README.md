@@ -18,6 +18,7 @@ Currently this supports:
 
 * BS3 bis(sulfosuccinimidyl)suberate
 
+Other linkers can be easily defined as functions in ```crosslinkers.py```
 
 ## Usage
 
@@ -35,10 +36,14 @@ Currently this supports:
     digest options:
       --missed-cleavages {0,1,2,3,4,5,6,7,8,9}
                             Max number of missed cleavages. (default: 0)
-      --find-overlaps       Find overlapping cleavages [Slow!]. (default: False)
+      --find-overlaps       Find overlapping cleavages [SLOW!]. (default: False)
     
     other options:
       --ox-met              Oxidize all methionines. (default: False)
+
+    Written by Nick Semenkovich <semenko@alum.mit.edu> for the Gordon Lab at
+    Washington University in St. Louis: http://gordonlab.wustl.edu.
+
 
 ## Authors
 **Nick Semenkovich** | https://nick.semenkovich.com/

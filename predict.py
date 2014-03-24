@@ -107,7 +107,7 @@ def main():
     digest_group.add_argument('--missed-cleavages', dest="cleavages", type=int, default=0, choices=range(0, 10),
                               help='Max number of missed cleavages.', required=False)
     digest_group.add_argument('--find-overlaps', dest="overlap", action='store_true',
-                              help='Find overlapping cleavages [Slow!].', required=False)
+                              help='Find overlapping cleavages [SLOW!].', required=False)
 
     # Other various options
     other_group = parser.add_argument_group('other options')

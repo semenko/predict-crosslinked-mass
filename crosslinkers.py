@@ -4,12 +4,12 @@ Crosslinker definition functions.
 Each function should follow the format of:
 
 Input:
-    *peptides: 1-N input peptides
+    *peptides: 1 to N input peptides
 
 Output:
-    Tuple of (bool, float), where:
-        bool = can crosslink?
-        float = mass shift (if linked, otherwise 0)
+    Dictionary of:
+        can_link = bool True/False
+        mass_shift = float (only if can_link is True)
 """
 
 
