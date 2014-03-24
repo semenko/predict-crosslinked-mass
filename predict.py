@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2014 Nick Semenkovich <semenko@alum.mit.edu> / WUSTL
+# Copyright (c) 2014 Nick Semenkovich <semenko@alum.mit.edu>.
+#   https://nick.semenkovich.com/
 #
 # Developed for the Gordon Lab, Washington University in St. Louis (WUSTL)
-# http://gordonlab.wustl.edu/
+#   http://gordonlab.wustl.edu/
 #
 # This software is released under the MIT License:
 #  <http://www.opensource.org/licenses/mit-license.php>
@@ -86,6 +87,8 @@ def attempt_crosslink(crosslinker, *peptides):
 def main():
     # Parse & interpret command line flags.
     parser = argparse.ArgumentParser(description='Compute protein/peptide crosslinks and masses.',
+                                     epilog="Written by Nick Semenkovich <semenko@alum.mit.edu> for the Gordon Lab at "
+                                            "Washington University in St. Louis: http://gordonlab.wustl.edu.",
                                      usage='%(prog)s [options]',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--input', dest="input", metavar='input.faa', type=str,
