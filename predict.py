@@ -34,14 +34,6 @@ MASS_H2O = 18.010565
 # For sanity-checking .faa input proteins
 AA_SHORT_CODES = "ACEDGFIHKMLNQPSRTWVY"
 
-AA_AVERAGE_MASSES = {
-    'A':  71.0788, 'C': 103.1388, 'E': 129.1155, 'D': 115.0886,
-    'G':  57.0519, 'F': 147.1766, 'I': 113.1594, 'H': 137.1411,
-    'K': 128.1741, 'M': 131.1926, 'L': 113.1594, 'N': 114.1038,
-    'Q': 128.1307, 'P':  97.1167, 'S':  87.0782, 'R': 156.1875,
-    'T': 101.1051, 'W': 186.2132, 'V':  99.1326, 'Y': 163.1760
-}
-
 AA_MONOISOTOPIC_MASSES = {
     'A':  71.03711, 'C': 103.00919, 'E': 129.04259, 'D': 115.02694,
     'G':  57.02146, 'F': 147.06841, 'I': 113.08406, 'H': 137.05891,
@@ -50,14 +42,10 @@ AA_MONOISOTOPIC_MASSES = {
     'T': 101.04768, 'W': 186.07931, 'V':  99.06841, 'Y': 163.06333
 }
 
-# We'll use the monoisotopic masses for our predictions.
-ACTIVE_AA_MASS = AA_MONOISOTOPIC_MASSES
-
-
 @memoize_single
 def mass(peptide_sequence):
     """ Compute a given peptide's mass. """
-    return sum([ACTIVE_AA_MASS[aa] for aa in peptide_sequence]) + MASS_H2O
+    return sum([AA_MONOISOTOPIC_MASSES[aa] for aa in peptide_sequence]) + MASS_H2O
 
 
 def parse_input_faa(in_faa):
@@ -126,7 +114,7 @@ def main():
     args = parser.parse_args()
 
     if args.ox_met is True:
-        ACTIVE_AA_MASS['M'] += 15.9949  # Oxidized methionine
+        AA_MONOISOTOPIC_MASSES['M'] += 15.9949  # Oxidized methionine
 
     # Read & parse our input file
     faa_sequence_dict = parse_input_faa(args.input)
